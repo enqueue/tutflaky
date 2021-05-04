@@ -2,6 +2,8 @@
 
 This is workshop material for a short hands-on tutorial on fault tolerance in Microservice architecture.
 
+We explore some behavior and strategies using two Microservices. [flaky-server](flaky-server) is a Microservice that is not behaving well. We try to make [flaky-client](flaky-client) which is consuming `flaky-server` services a little bit more robust.
+
 ## Motivation
 
 * There are more interdependent Microservices.
@@ -26,7 +28,7 @@ A measure to ensure that our client Microservice will still be handle to serve r
 
 ### HttpClient
 
-In the built-in [HttpClient|https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html), we can specify a timeout [via the builder](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.Builder.html#connectTimeout(java.time.Duration)) or per [request](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpRequest.Builder.html#timeout(java.time.Duration)). Either way, when the timeout is over, the client will throw a [HttpTimeoutException|https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpTimeoutException.html], which is a sub-class of `IOException`.
+In the built-in [HttpClient](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html), we can specify a timeout [via the builder](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.Builder.html#connectTimeout(java.time.Duration)) or per [request](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpRequest.Builder.html#timeout(java.time.Duration)). Either way, when the timeout is over, the client will throw a [HttpTimeoutException](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpTimeoutException.html], which is a sub-class of `IOException`.
 
 ```
 http://localhost:8080/httpclient/flaky
@@ -58,3 +60,39 @@ MicroProfile Rest Client timeouts are specified via configuration. Again, connec
 ```
 http://localhost:8080/mp/waiter
 ```
+
+### Microprofile Fault Tolerance
+
+When the Microservices architecture gained momentum about a decade ago, dealing with fault tolerance became a major topic. Application developers used to use popular libraries like Netflix' [Hystrix](https://github.com/Netflix/Hystrix) or Jonathan Halterman's [failsafe](https://jodah.net/failsafe). The Microprofile community tries to address common Microservice issues, so they issued a vendor neutral specification, [MicroProfile Fault Tolerance](https://github.com/eclipse/microprofile-fault-tolerance/releases/tag/2.1.1).
+
+You can decorate a method with a Microprofile Fault Tolerance annotation, and the implemtnation will take care about the rest (e.g. create a proxy object). The annotations can be used on (almost) any method, not only remote HTTP calls. A CDI context is required.
+
+In our example. we can use the [Timeout](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/apidocs/org/eclipse/microprofile/faulttolerance/Timeout.html) annotation on one of our client methods. The implementation will throw a [TimeoutException](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/apidocs/org/eclipse/microprofile/faulttolerance/exceptions/TimeoutException.html) when the time has run out (default unit is milliseconds). Timeout values can also be set via [configuration properties](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#_config_fault_tolerance_parameters), on different levels. E.g. to set the timeout for all client calls to 1337 milliseconds, you could add `Timeout/value = 1337` to your `application.properties` file -- _I tried this, but it did not work as expected._
+
+```
+http://localhost:8080/httpclient/waitermpfault
+```
+
+### Summary
+
+
+> Great, I now know that specifying timeouts is important to make my Microservices
+> zoo better. I also know how to do this for a couple of popular client libraries.
+> But throwing `TimeoutExceptions` is certainly not _always_ the right reaction of a
+> well-behaved Microservice, is it?
+
+You are right. Let's see which other problems we can address. We are using the constructs offered by Microprofile Fault Tolerance, but the concepts are used universally.
+
+> All this timeout stuff becomes superfluous once we adopt the _REACTIVE WAY™_,
+> because we won't block any threads.
+
+Sure, the issue of a Microservice being brought to a halt by hanging connections to a downstream Microservice, might become less of an issue. It is still good practice not to leave too much garbage around. More importantly, we still have to learn one of the asynchronous ways, e.g. JAX-RS aynchronous API or Quarkus / Vert.x / Mutiny stuff or...
+
+
+## Retry
+
+## Circuit Breaker
+
+## Fallback
+
+## Bulkhead

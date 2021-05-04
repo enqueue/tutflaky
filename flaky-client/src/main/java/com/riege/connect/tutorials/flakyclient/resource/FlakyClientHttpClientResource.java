@@ -17,6 +17,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 
 /**
  * Call the server using Java built-in {@link HttpClient} and be very robust
@@ -88,6 +89,21 @@ public class FlakyClientHttpClientResource {
             return true;
         }
         throw new RuntimeException("kaputt");
+    }
+
+    @Timeout(200) // MP Fault Tolerance
+    @GET
+    @Path("waitermpfault")
+    public boolean callWaitTimeoutMPFault() throws Exception {
+       HttpResponse<Void> response = httpClient.send(
+            HttpRequest.newBuilder(
+                URI.create("http://localhost:" + flakyServerPort + "/wait"))
+            .timeout(Duration.ofMillis(200L))
+            .build(),
+            BodyHandlers.discarding());
+       Logger.getLogger(FlakyClientHttpClientResource.class.getName())
+           .info("Response Status: " + response.statusCode());
+       return true;
     }
 
 }
