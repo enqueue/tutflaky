@@ -158,3 +158,10 @@ _This is used for static rate limiting. I do not know anything about it._
 3.3. Do not count client errors as Circuit breaker failures.
 4. Beware of the default Microprofile Client Exception Mapper.
 5. Every Microservice call should use a Circuit breaker.
+
+## Material
+
+* [Making the Netflix API More Resilient](https://netflixtechblog.com/making-the-netflix-api-more-resilient-a8ec62159c2d)
+* [Fault Tolerance in Hight Volume, Distributed Systems](https://netflixtechblog.com/fault-tolerance-in-a-high-volume-distributed-system-91ab4faae74a)
+* [Strategies for handling partial failure](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/partial-failure-strategies)
+*
