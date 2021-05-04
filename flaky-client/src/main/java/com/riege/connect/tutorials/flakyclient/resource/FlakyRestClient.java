@@ -24,4 +24,8 @@ public interface FlakyRestClient {
     @Path("mixed")
     String flaky();
 
+    @GET
+    @Path("bad")
+    String bad();
+
 }

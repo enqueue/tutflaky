@@ -21,7 +21,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class FlakyClientJAXRSClientResource {
 
     @ConfigProperty(name = "com.riege.connect.tutorials.flakyclient.server.http.port")
-    private String flakyServerPort;
+    String flakyServerPort;
 
     @GET
     @Path("waiter")

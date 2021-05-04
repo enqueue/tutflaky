@@ -7,6 +7,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 @Path("/")
 public class FlakyResource {
@@ -37,6 +39,14 @@ public class FlakyResource {
             LOGGER.severe("interrupted");
         }
         return "wokeup";
+    }
+
+    @GET
+    @Path("bad")
+    public Response badRequest() {
+        return Response
+            .status(Status.BAD_REQUEST)
+            .build();
     }
 
     private void maybeFail() {

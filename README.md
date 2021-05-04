@@ -28,7 +28,7 @@ A measure to ensure that our client Microservice will still be handle to serve r
 
 ### HttpClient
 
-In the built-in [HttpClient](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html), we can specify a timeout [via the builder](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.Builder.html#connectTimeout(java.time.Duration)) or per [request](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpRequest.Builder.html#timeout(java.time.Duration)). Either way, when the timeout is over, the client will throw a [HttpTimeoutException](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpTimeoutException.html], which is a sub-class of `IOException`.
+In the built-in [HttpClient](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.html), we can specify a timeout [via the builder](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpClient.Builder.html#connectTimeout(java.time.Duration)) or per [request](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpRequest.Builder.html#timeout(java.time.Duration)). Either way, when the timeout is over, the client will throw a [HttpTimeoutException](https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/HttpTimeoutException.html), which is a sub-class of `IOException`.
 
 ```
 http://localhost:8080/httpclient/flaky
@@ -88,11 +88,73 @@ You are right. Let's see which other problems we can address. We are using the c
 
 Sure, the issue of a Microservice being brought to a halt by hanging connections to a downstream Microservice, might become less of an issue. It is still good practice not to leave too much garbage around. More importantly, we still have to learn one of the asynchronous ways, e.g. JAX-RS aynchronous API or Quarkus / Vert.x / Mutiny stuff or...
 
-
 ## Retry
 
-## Circuit Breaker
+When experiencing a failure during a remote call, we sometimes hope that a following call will be successful. This is what the [Retry](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#retry) annotation is good for. The spec says:
+
+> In order to recover from a brief network glitch, @Retry
+> can be used to invoke the same operation again
+
+The retry policy is activated when an exception in thrown during the call. This is clearly written in the spec:
+
+> When a method returns and the retry policy is present, the following rules are applied:
+> * If the method returns normally (doesn’t throw), the result is simply returned.
+> * Otherwise, if the thrown object is assignable to any value in the abortOn parameter, the thrown object is rethrown.
+> * Otherwise, if the thrown object is assignable to any value in the retryOn parameter, the method call is retried.
+> * Otherwise the thrown object is rethrown.
+
+So it depends a little bit on the client we are using to make the request: The regular HttpClient is happy when a response is returned. MicroProfile Rest Client's default `ResponseExceptionMapper` on the other hand will throw a JAX-RS `WebApplicationException` when it encounters a response with a status code >= 400.
+
+It does _not_ make sense to retry a call to an endpoint when we receive a response in the 400 range, so we should limit the retries to those Exception from which we hope we can recover, e.g. `SocketTimeoutException` or `IOException` in general. This can be achieved using the `retryOn` property of the `@Retry` annotation.
+
+Bonus: Use the metrics integration for understanding what happens. Do not use in production, I would recommend.
+
+```
+curl -L http://localhost:8080/metrics | grep ft
+```
 
 ## Fallback
 
+Instead of using a `try / catch` block or parsing the "bad" responses yourself, you can use the [Fallback](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#fallback) annotation, specifying the method which should be called.
+
+You can limit the fallback to certain Exceptions using the `applyOn` property. This is a natural match with the Exceptions the other MicroProfile Fault Tolerance annotations, e.g. `CircuitBreakerOpenException`.
+
+```
+http://localhost:8080/retry/fall
+```
+
+## Circuit Breaker
+
+Imagine you have a Microservice that is currently feeling a little bit weak. If this is a service that is called by a cascade of other, dependent Microservices each of which uses a Retry mechanism to try and make up for errors, you end up with a lot more stress on the poor service and the client services will be busy with their retries instead of getting other work done. This is where the [Circuit breaker](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#circuitbreaker) comes into play: Instead of spending more resources on trying to get an answer from and putting more pressure on a downstream service that is probably not able to serve our requests right now, we can back off and perform some default operation for a certain time. After that period we will check again if the downstream service can answer our requests.
+
+You annotate the method with a `@CircuitBreaker` annotation to make use of this pattern. Each Circuit breaker requires resources for bookkeeping.
+
+These are its properties:
+
+Property | Explanation
+-------- | -----------
+`failureRatio` | Open the circuit, when the ratio of failures is above this threshold
+`requestVolumeThreshold` | Window size for determining the ratio (amount of invocations)
+`successThreshold` | When trying to close the circuit again, how many trial calls should we perform?
+`delay` | How long should the Circuit breaker remain open for, before trying to close it again?
+
+Remember, that is does probably not make sense to count responses from the 400 range as failures, so you can use the `failOn` property to specify the type of Exception you want to fail on, or the `skipOn` property if you want to ignore certain exceptions.
+
+```
+http://localhost:8080/retry/break
+```
+
 ## Bulkhead
+
+_This is used for static rate limiting. I do not know anything about it._
+
+## Summary
+
+1. Every Microservice call should time out.
+2. Think about your response when a downstream service fails: Is there a good default? Do you want to signal an Exception upstream?
+3. Think about your response when a downstream service signals a client error (400 range):
+3.1. Is your caller responsible? Then perhaps he should get a 400 answer, too.
+3.2. Do not retry requests that yielded a 400 response.
+3.3. Do not count client errors as Circuit breaker failures.
+4. Beware of the default Microprofile Client Exception Mapper.
+5. Every Microservice call should use a Circuit breaker.

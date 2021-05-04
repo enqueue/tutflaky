@@ -31,7 +31,7 @@ public class FlakyClientHttpClientResource {
     private HttpClient httpClient;
 
     @ConfigProperty(name = "com.riege.connect.tutorials.flakyclient.server.http.port")
-    private String flakyServerPort;
+    String flakyServerPort;
 
     public FlakyClientHttpClientResource() {
         httpClient = HttpClient.newBuilder().build();
