@@ -43,6 +43,8 @@ When using the great JAX-RS client API (see chapter 5 in [JAX-RS spec](https://d
 1. [Connect timeout](https://eclipse-ee4j.github.io/jaxrs-api/apidocs/2.1.6/javax/ws/rs/client/ClientBuilder.html#connectTimeout(long,java.util.concurrent.TimeUnit)): This timout relates to establishing the initial connection. Useful when the servers are not available at all. You will see a [TimeoutException](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TimeoutException.html) wrapped in a [ProcessingException](https://eclipse-ee4j.github.io/jaxrs-api/apidocs/2.1.6/javax/ws/rs/ProcessingException.html).
 2. [Read timeout](https://eclipse-ee4j.github.io/jaxrs-api/apidocs/2.1.6/javax/ws/rs/client/ClientBuilder.html#readTimeout(long,java.util.concurrent.TimeUnit)): This timeout comes into play when the initial connection has been established. The thread will wait for response packets for the specified duration before raising a [TimeoutException](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/TimeoutException.html) wrapped in a [ProcessingException](https://eclipse-ee4j.github.io/jaxrs-api/apidocs/2.1.6/javax/ws/rs/ProcessingException.html).
 
+We should always care about both time outs.
+
 Instead of using the methods on the builder explicitly, you can also create a re-usable [Configuration](https://eclipse-ee4j.github.io/jaxrs-api/apidocs/2.1.6/javax/ws/rs/core/Configuration.html) and pass it along.
 
 ```
@@ -103,7 +105,7 @@ The retry policy is activated when an exception in thrown during the call. This 
 > * Otherwise, if the thrown object is assignable to any value in the retryOn parameter, the method call is retried.
 > * Otherwise the thrown object is rethrown.
 
-So it depends a little bit on the client we are using to make the request: The regular HttpClient is happy when a response is returned. MicroProfile Rest Client's default `ResponseExceptionMapper` on the other hand will throw a JAX-RS `WebApplicationException` when it encounters a response with a status code >= 400.
+So it depends a little bit on the client we are using to make the request: The regular HttpClient is happy when a response is returned. MicroProfile Rest Client's default `ResponseExceptionMapper` on the other hand will throw a JAX-RS [WebApplicationException](https://docs.oracle.com/javaee/7/api/javax/ws/rs/WebApplicationException.html) when it encounters a response with a status code >= 400 (we _hope_ that it will differentiate between `ClientErrorException` and `ServerErrorException`).
 
 It does _not_ make sense to retry a call to an endpoint when we receive a response in the 400 range, so we should limit the retries to those Exception from which we hope we can recover, e.g. `SocketTimeoutException` or `IOException` in general. This can be achieved using the `retryOn` property of the `@Retry` annotation.
 
@@ -133,8 +135,8 @@ These are its properties:
 
 Property | Explanation
 -------- | -----------
-`failureRatio` | Open the circuit, when the ratio of failures is above this threshold
-`requestVolumeThreshold` | Window size for determining the ratio (amount of invocations)
+`failureRatio` | Open the circuit, when the ratio of failures is above this threshold (default = 0.5)
+`requestVolumeThreshold` | Window size for determining the ratio (amount of invocations) (default = 0.2)
 `successThreshold` | When trying to close the circuit again, how many trial calls should we perform?
 `delay` | How long should the Circuit breaker remain open for, before trying to close it again?
 

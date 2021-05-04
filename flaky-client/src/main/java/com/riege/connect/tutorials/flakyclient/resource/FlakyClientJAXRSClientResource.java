@@ -47,9 +47,9 @@ public class FlakyClientJAXRSClientResource {
     @Path("connecttimeout")
     public boolean callConnectTimeout() {
         Client client = ClientBuilder.newBuilder()
-            .connectTimeout(200, TimeUnit.MILLISECONDS)
+            .connectTimeout(2200, TimeUnit.MILLISECONDS)
             .build();
-        client.target("http://zonk.gibbetnich" + flakyServerPort + "/ZONK")
+        client.target("http://xdispatcher.dev.riege.de:4815")
             .request().get();
         return true;
     }

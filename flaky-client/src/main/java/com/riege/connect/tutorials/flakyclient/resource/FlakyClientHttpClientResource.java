@@ -98,7 +98,6 @@ public class FlakyClientHttpClientResource {
        HttpResponse<Void> response = httpClient.send(
             HttpRequest.newBuilder(
                 URI.create("http://localhost:" + flakyServerPort + "/wait"))
-            .timeout(Duration.ofMillis(200L))
             .build(),
             BodyHandlers.discarding());
        Logger.getLogger(FlakyClientHttpClientResource.class.getName())
