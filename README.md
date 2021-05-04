@@ -71,6 +71,8 @@ You can decorate a method with a MicroProfile Fault Tolerance annotation, and th
 
 In our example. we can use the [Timeout](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/apidocs/org/eclipse/microprofile/faulttolerance/Timeout.html) annotation on one of our client methods. The implementation will throw a [TimeoutException](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/apidocs/org/eclipse/microprofile/faulttolerance/exceptions/TimeoutException.html) when the time has run out (default unit is milliseconds). Timeout values can also be set via [configuration properties](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#_config_fault_tolerance_parameters), on different levels. E.g. to set the timeout for all client calls to 1337 milliseconds, you could add `Timeout/value = 1337` to your `application.properties` file -- _I tried this, but it did not work as expected._
 
+The `@TimeOut` annotation wraps around a method, so its use is not necessarily limited to one downstream call. It depends on what you are doing in your method; perhaps you are calling drölf downstream services in a synchronous manner.
+
 ```
 http://localhost:8080/httpclient/waitermpfault
 ```
@@ -88,7 +90,7 @@ You are right. Let's see which other problems we can address. We are using the c
 > All this timeout stuff becomes superfluous once we adopt the _REACTIVE WAY™_,
 > because we won't block any threads.
 
-Sure, the issue of a Microservice being brought to a halt by hanging connections to a downstream Microservice, might become less of an issue. It is still good practice not to leave too much garbage around. More importantly, we still have to learn one of the asynchronous ways, e.g. JAX-RS aynchronous API or Quarkus / Vert.x / Mutiny stuff or...
+Sure, the issue of a Microservice being brought to a halt by hanging connections to a downstream Microservice, might become less of an issue. It is still good practice not to leave too much garbage around. More importantly, we still have to learn one of the asynchronous or reactive ways, e.g. JAX-RS aynchronous API or Quarkus / Vert.x / Mutiny stuff or...
 
 ## Retry
 
@@ -158,7 +160,7 @@ _This is used for static rate limiting. I do not know anything about it._
 * Is your caller responsible? Then perhaps he should get a 400 answer, too.
 * Do not retry requests that yielded a 400 response.
 * Do not count client errors as Circuit breaker failures.
-4. Beware of the default MicroProfile Client Exception Mapper.
+4. Beware of the MicroProfile Client [Default ResponseExceptionMapper](http://download.eclipse.org/microprofile/microprofile-rest-client-1.4.1/microprofile-rest-client-1.4.1.html#_default_responseexceptionmapper).
 5. Every Microservice call should use a Circuit breaker.
 
 ## Material
