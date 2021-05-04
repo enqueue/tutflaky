@@ -1,0 +1,49 @@
+# Gradle work directory
+.gradle
+
+# Build output directies
+/target
+*/target
+/build
+*/build
+build/
+testdb
+bin/*
+dist/
+.settings/
+build.properties
+junit*.properties
+
+# IntelliJ IDEA
+out
+*.ipr
+*.iml
+*.iws
+.idea/
+.idea_modules/
+atlassian-ide-plugin.xml
+
+# Eclipse specific files/directories
+.classpath
+.project
+.settings
+.metadata
+*/.checkstyle
+bin
+
+# NetBeans specific files/directories
+.nbattrs
+
+# VS Code specific files/directories
+.vscode
+
+# Miscellaneous
+*.log
+.clover
+
+# Mac OS/X
+.DS_Store
+
+# Common swap files be gone
+*.swp
+*~
