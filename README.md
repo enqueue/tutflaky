@@ -53,7 +53,7 @@ http://localhost:8080/jaxrs/waitertimeout
 http://localhost:8080/jaxrs/connecttimeout
 ```
 
-### Microprofile Rest Client
+### MicroProfile Rest Client
 
 We have enjoyed using the [MicroProfile Rest Client API](https://github.com/eclipse/microprofile-rest-client/releases/tag/1.4.1) to make calls to remote services. We can write an interface and leave the actual HTTP stuff to the implementation and the application server.
 
@@ -63,11 +63,11 @@ MicroProfile Rest Client timeouts are specified via configuration. Again, connec
 http://localhost:8080/mp/waiter
 ```
 
-### Microprofile Fault Tolerance
+### MicroProfile Fault Tolerance
 
-When the Microservices architecture gained momentum about a decade ago, dealing with fault tolerance became a major topic. Application developers used to use popular libraries like Netflix' [Hystrix](https://github.com/Netflix/Hystrix) or Jonathan Halterman's [failsafe](https://jodah.net/failsafe). The Microprofile community tries to address common Microservice issues, so they issued a vendor neutral specification, [MicroProfile Fault Tolerance](https://github.com/eclipse/microprofile-fault-tolerance/releases/tag/2.1.1).
+When the Microservices architecture gained momentum about a decade ago, dealing with fault tolerance became a major topic. Application developers used to use popular libraries like Netflix' [Hystrix](https://github.com/Netflix/Hystrix) or Jonathan Halterman's [failsafe](https://jodah.net/failsafe). The MicroProfile community tries to address common Microservice issues, so they issued a vendor neutral specification, [MicroProfile Fault Tolerance](https://github.com/eclipse/microprofile-fault-tolerance/releases/tag/2.1.1).
 
-You can decorate a method with a Microprofile Fault Tolerance annotation, and the implemtnation will take care about the rest (e.g. create a proxy object). The annotations can be used on (almost) any method, not only remote HTTP calls. A CDI context is required.
+You can decorate a method with a MicroProfile Fault Tolerance annotation, and the implemtnation will take care about the rest (e.g. create a proxy object). The annotations can be used on (almost) any method, not only remote HTTP calls. A CDI context is required.
 
 In our example. we can use the [Timeout](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/apidocs/org/eclipse/microprofile/faulttolerance/Timeout.html) annotation on one of our client methods. The implementation will throw a [TimeoutException](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/apidocs/org/eclipse/microprofile/faulttolerance/exceptions/TimeoutException.html) when the time has run out (default unit is milliseconds). Timeout values can also be set via [configuration properties](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#_config_fault_tolerance_parameters), on different levels. E.g. to set the timeout for all client calls to 1337 milliseconds, you could add `Timeout/value = 1337` to your `application.properties` file -- _I tried this, but it did not work as expected._
 
@@ -83,7 +83,7 @@ http://localhost:8080/httpclient/waitermpfault
 > But throwing `TimeoutExceptions` is certainly not _always_ the right reaction of a
 > well-behaved Microservice, is it?
 
-You are right. Let's see which other problems we can address. We are using the constructs offered by Microprofile Fault Tolerance, but the concepts are used universally.
+You are right. Let's see which other problems we can address. We are using the constructs offered by MicroProfile Fault Tolerance, but the concepts are used universally.
 
 > All this timeout stuff becomes superfluous once we adopt the _REACTIVE WAY™_,
 > because we won't block any threads.
@@ -155,10 +155,10 @@ _This is used for static rate limiting. I do not know anything about it._
 1. Every Microservice call should time out.
 2. Think about your response when a downstream service fails: Is there a good default? Do you want to signal an Exception upstream?
 3. Think about your response when a downstream service signals a client error (400 range):
-3.1. Is your caller responsible? Then perhaps he should get a 400 answer, too.
-3.2. Do not retry requests that yielded a 400 response.
-3.3. Do not count client errors as Circuit breaker failures.
-4. Beware of the default Microprofile Client Exception Mapper.
+* Is your caller responsible? Then perhaps he should get a 400 answer, too.
+* Do not retry requests that yielded a 400 response.
+* Do not count client errors as Circuit breaker failures.
+4. Beware of the default MicroProfile Client Exception Mapper.
 5. Every Microservice call should use a Circuit breaker.
 
 ## Material
@@ -166,4 +166,5 @@ _This is used for static rate limiting. I do not know anything about it._
 * [Making the Netflix API More Resilient](https://netflixtechblog.com/making-the-netflix-api-more-resilient-a8ec62159c2d)
 * [Fault Tolerance in Hight Volume, Distributed Systems](https://netflixtechblog.com/fault-tolerance-in-a-high-volume-distributed-system-91ab4faae74a)
 * [Strategies for handling partial failure](https://docs.microsoft.com/en-us/dotnet/architecture/microservices/implement-resilient-applications/partial-failure-strategies)
-*
+* [MicroProfile Fault Tolerance tutorials for OpenLiberty](https://developer.ibm.com/videos/build-fault-tolerant-microservices-intro/)
+* [Quarkus SmallRye Fault Tolerance Guide](https://quarkus.io/guides/smallrye-fault-tolerance)
