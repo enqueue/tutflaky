@@ -1,6 +1,12 @@
+buildscript {
+    ext {
+        quarkusVersion = '3.0.2.Final'
+    }
+}
+
 plugins {
     id 'java'
-    id 'io.quarkus'
+    id 'io.quarkus' version "${quarkusVersion}"
 }
 
 repositories {
@@ -8,16 +14,16 @@ repositories {
 }
 
 dependencies {
-    implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
-    implementation 'io.quarkus:quarkus-resteasy'
+    implementation enforcedPlatform("io.quarkus:quarkus-universe-bom:${quarkusVersion}")
+    implementation 'io.quarkus:quarkus-resteasy-reactive'
 }
 
-group 'com.riege.connect.tutorials'
-version '0.0.1'
-
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 compileJava {
