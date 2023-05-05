@@ -119,7 +119,7 @@ curl -L http://localhost:8080/metrics | grep ft
 
 ## Fallback
 
-Instead of using a `try / catch` block or parsing the "bad" responses yourself, you can use the [Fallback](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#fallback) annotation, specifying the method which should be called.
+Instead of using a `try / catch` block or parsing the "bad" responses yourself, you can use the [Fallback](https://download.eclipse.org/microprofile/microprofile-fault-tolerance-2.1.1/microprofile-fault-tolerance-spec.html#fallback) annotation, typically specifying the method which should be called.
 
 You can limit the fallback to certain Exceptions using the `applyOn` property. This is a natural match with the Exceptions the other MicroProfile Fault Tolerance annotations, e.g. `CircuitBreakerOpenException`.
 
